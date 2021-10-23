@@ -152,10 +152,8 @@ def time_estimation(v_0):
     return average_time
     
 
-v_0 = np.array
 b = time_estimation(v_0)
 
-print("Hello World")
 
 
 '''
