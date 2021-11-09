@@ -8,6 +8,7 @@ Created on Thu Oct 21 10:27:11 2021
 
 import numpy as np
 
+import matplotlib.pyplot as plt
 
 class physicalQuantity:
 
@@ -32,7 +33,7 @@ apogee = physicalQuantity(0.4055 * 10 ** 9, 0.00005 * 10 ** 9)  # m
 
 distance_EarthToMoon = 4 * 10 ** 8  # m
 
-dt = 0.1# sec
+dt = 10# sec
 
 v_0 = [3 * 10 **4, 0, 0]  # m/s
 x_0 = [radius_earth.value + 100 * 10 ** 3, 0, 0]  # m 100km represents the Karman line
@@ -108,7 +109,7 @@ def travel_to_the_moon(x_0, v_0):
 
         if (distance_rocketToEarth < earth.radius.value):
             #print("Fell back to Earth!")
-            return -1
+            return -2
 
         moon_pos = np.array([moon.pos.value - moon.pos.error, moon.pos.value + moon.pos.error ])
         d = np.array([radius_moon.value + radius_moon.error, radius_moon.value - radius_moon.error])
@@ -139,55 +140,70 @@ def travel_to_the_moon(x_0, v_0):
     return -99
 
 
-def time_estimation(v_0):
 
-    x_0 = [radius_earth.value + 100 * 10 ** 3, 0, 0] 
+def timeEstimation(x_0,v_0):
 
-    time_taken_array = travel_to_the_moon(x_0,v_0)
-    short_time = np.min(time_taken_array)
-    long_time = np.max(time_taken_array)
+    
+    time_taken = travel_to_the_moon(x_0,v_0)
+
+    if isinstance(time_taken,int):
+        if time_taken == -1:
+             return -1
+        if time_taken == -2:
+             return -2
+        else:
+             return -99
+
+    short_time = np.min(time_taken)
+    long_time = np.max(time_taken)
 
     average_time = physicalQuantity( ((long_time+ 0.5*dt) +  (short_time - 0.5*dt))/2, long_time+0.5*dt-(short_time-0.5*dt) )
 
     return average_time
     
 
-b = time_estimation(v_0)
 
 
+times = np.array([])
+v_0_speeds = np.arange(12*10**3, 99*10**3, 10**3 )
+e_1 = np.array([1,0,0]).reshape(3,1)
+v_0_array = e_1 * v_0_speeds
 
-'''
-# Let's find the minimum initial velocity needed to reach the moon
-        
-a = [1*10**4,0,0]# m/s
-a = np.array(a)
-b = [2*10**4,0,0]# m/s
-b = np.array(b)
-   
-
-def minimum_initial_velocity(x_0,a,b,n):
-    f_a = travel_to_the_moon(x_0,a)
-    f_b = travel_to_the_moon(x_0,b)
+for column in v_0_array.T:
+    time_estimation = timeEstimation(x_0,column) 
     
-    if (np.linalg.norm(a-b) < 0.1 and f_a*f_b < 0):
-        return (a+b)/2
-    if ( n > 100):
-        print("Over 100 bisection iterations!")
-        return -99
-
-    if (travel_to_the_moon(x_0,(a+b)/2)*f_a < 0) :
-        b = (a+b)/2
-        n = n+1
-        return(minimum_initial_velocity(x_0,a,b,n))
-    
+    if isinstance(time_estimation, int):
+        if time_estimation == -1:
+            print("Rocket has left the vicinity of the Earth-Moon system with an initial velocity of", column)
+        if time_estimation == -2:
+            print("One of the initial velocities ", column ,"has a magnitude below the minimum initial speed", 11666)
+            
+        if time_estimation == -99:
+            print("Unknown error has occurred with an initial velocity of ", column) 
     else:
-        a = (a+b)/2
-        n = n+1
-        return(minimum_initial_velocity(x_0,a,b,n))
-        
-v_0_min = minimum_initial_velocity(x_0,a,b,1)
-print("The minimum initial speed to reach the moon is about", round(np.linalg.norm(v_0_min)*10**-3,2), "km/s.")
-'''
+        times = np.append(times,time_estimation)
+
+avg_times = np.zeros(len(times))
+error_times = np.zeros(len(times))
+
+print(avg_times)
+
+for i in range(len(times)):
+    avg_times[i] = times[i].value
+    error_times[i] = times[i].error
+
+plt.plot(v_0_speeds, avg_times, 'r-')
+plt.axis([12*10**3, 99*10**3, np.min(avg_times), np.max(avg_times)])
+plt.show()
+
+
+#b = timeEstimation(x_0,v_0)
+
+#print("We have arrived to the moon! \nIt took us", round(b.value,2), "seconds or ", round(b.value/3600,3) , "hours.")
+
+
+
+
 
 '''def main():
     
