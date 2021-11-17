@@ -36,22 +36,15 @@ class rocket:
         return a
     def move(self):
         a = self.acceleration(self.pos)
-       # print("a",a)
-    # print(self.pos)
         self.pos = self.pos + self.v *dt + 0.5*a*dt**2
-     #   print(self.v)
         self.v = self.v +a*dt
-     #   print(self.v)
 
 def reachTheMoon(myrocket):
     t = 0
 
     while t < 1*10**6:
 
-       # print(myrocket.pos,myrocket.v)
-
         if myrocket.v < 0:
-            #print("Didn't reach the moon")
             return False
         
         myrocket.move()
@@ -59,113 +52,9 @@ def reachTheMoon(myrocket):
         t = t+dt
         
         if myrocket.pos > moon.pos - moon.radius:
-     #       print("true")
             return True
 
     return False
-
-'''
-    def move(self):
-        
-        a_n = self.acceleration(self.pos)
-        a_n1 = self.acceleration(self.pos + dr)
-
-        self.v[0] = (self.v[0] + np.sqrt(self.v[0]**2 + 4*( (a_n ) )*dr))/2
-        self.v[1] = (self.v[1] + np.sqrt(self.v[1]**2 + 4*( (a_n1) )*dr))/2
-        self.pos = self.pos + dr
-'''
-
-'''
-    def getTimeIncrease(self):
-
-        dt_small = (-3*10**9)*np.ones(2)
-        dt_large = (3*10**9)*np.ones(2)
-
-        for i in range(0,2):
-
-            if self.pos < zeroAccelerationPoint and self.pos+dr < zeroAccelerationPoint:
-
-                v_n = self.v[i]
-                #a_n = self.a
-                a_n1 = self.acceleration(self.pos+dr)
- 
-                dt_small[i] = dr / v_n
-                dt_large[i] = ( -v_n + np.sqrt(v_n**2 + 4 * a_n1 * dr ) ) / ( 2 * a_n1 ) 
-                #print(dt_small, dt_large)
-
-            if self.pos+dr == zeroAccelerationPoint:
-
-                v_n = self.v[i]
-                dt_small[i] =  dr / v_n
-                dt_large[i] = dr / v_n
-
-            if self.pos +dr > zeroAccelerationPoint and self.pos < zeroAccelerationPoint:
-
-                x_n = self.pos
-                v_n = self.v[i]
-                a_n = self.acceleration(self.pos)
-                a_n1 = self.acceleration(self.pos+dr)
-            
-                dt_small[i] = min( ( -v_n + np.sqrt(v_n**2 + 4 * a_n1 * dr ) ) / ( 2 * a_n1 ), dr / v_n) 
-                dt_large[i] = dr / (v_n + a_n*(zeroAccelerationPoint -x_n)) 
-
-
-            if self.pos + dr > zeroAccelerationPoint and self.pos >= zeroAccelerationPoint:
-
-                v_n = self.v[i]
-                a_n1 = self.acceleration(self.pos+dr)
-                
-                dt_small[i] =  ( -v_n + np.sqrt(v_n**2 + 4 * a_n1 * dr ) ) / ( 2 * a_n1 ) 
-                dt_large[i] = dr / v_n
-
-        return [min(dt_small), max(dt_large)]
-'''
-
-
-'''
-def timeTaken(x_0,v_0):
-
-    bodies = [earth,moon]
-    myrocket = rocket(x_0,v_0, bodies)
-
-    t_smaller = 0
-    t_larger = 0
-
-    counter = 0
-
-    while counter < 1*10**10:
-        
-        distancerocketearth = abs(myrocket.pos - earth.pos)
-        distancerocketmoon = abs(myrocket.pos - moon.pos)
-
-       # print(myrocket.v)
-        if distancerocketearth > 2 * moon.pos:
-            break
-            #return -1
-        if distancerocketearth < earth.radius:
-            break
-            #return -2
-        if distancerocketmoon < moon.radius:
-            break
-
-
-        else:
-            dt = myrocket.getTimeIncrease()
-            if np.isnan(dt[0]):
-                print("going back to earth")
-                break
-            
-            t_smaller = t_smaller + dt[0]
-            t_larger = t_larger + dt[1]
-            myrocket.move()
-            counter = counter +1
-
-
-    return [t_smaller, t_larger, myrocket,counter]
-
-
-'''
-
 
 def randomise(variable, maxError):
     variable = uniform(variable+maxError, variable-maxError)
