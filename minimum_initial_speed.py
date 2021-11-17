@@ -1,11 +1,13 @@
 import numpy as np
 import pandas as pd
-import matplotlib as plt
 from random import  uniform
 
-G = 6.7 * 10 ** (-11) # universal gravitational constant 
-dr = 3*10**5# (m) distance steps
-h = 100*10**3 # (m) height of the atmosphere above the Earth's surface
+
+
+G = 6.7 * 10 ** (-11)
+dr = 1*10**6
+dt = 1
+h = 100*10**3
 
 class planet:
 
@@ -14,29 +16,55 @@ class planet:
         self.radius = radius  # m
         self.mass = mass  # kg
 
-#earth = planet(p_e, r_e, m_e)
-#moon = planet(p_m, r_m, m_m)
 
 
 class rocket:
 
-    def __init__(self, pos, v, earth,moon):
+    def __init__(self, pos, v, bodies):
     
         self.pos = pos
         self.v = v
-        self.earth = earth
-        self.moon = moon
+        self.bodies = bodies
 
     def acceleration(self,pos):
         a = 0
-        bodies = [self.earth,self.moon]
-        for body in bodies:
-            r = body.pos - pos
+        for body in self.bodies:
+            r = body.pos - self.pos
             r_abs = abs(r)
             a = a + ((G * body.mass) / (r_abs) ** 3) * r
             
         return a
+    def move(self):
+        a = self.acceleration(self.pos)
+       # print("a",a)
+    # print(self.pos)
+        self.pos = self.pos + self.v *dt + 0.5*a*dt**2
+     #   print(self.v)
+        self.v = self.v +a*dt
+     #   print(self.v)
 
+def reachTheMoon(myrocket):
+    t = 0
+
+    while t < 1*10**6:
+
+       # print(myrocket.pos,myrocket.v)
+
+        if myrocket.v < 0:
+            #print("Didn't reach the moon")
+            return False
+        
+        myrocket.move()
+
+        t = t+dt
+        
+        if myrocket.pos > moon.pos - moon.radius:
+     #       print("true")
+            return True
+
+    return False
+
+'''
     def move(self):
         
         a_n = self.acceleration(self.pos)
@@ -44,16 +72,14 @@ class rocket:
 
         self.v[0] = (self.v[0] + np.sqrt(self.v[0]**2 + 4*( (a_n ) )*dr))/2
         self.v[1] = (self.v[1] + np.sqrt(self.v[1]**2 + 4*( (a_n1) )*dr))/2
-        self.pos = self.pos + dr 
+        self.pos = self.pos + dr
+'''
 
-
+'''
     def getTimeIncrease(self):
 
-        dt_small = (-0.1)*np.ones(2)
-        dt_large = (-0.1)*np.ones(2)
-
-
-        zeroAccelerationPoint = (self.moon.pos ) / ( np.sqrt(self.moon.mass / self.earth.mass) + 1 )
+        dt_small = (-3*10**9)*np.ones(2)
+        dt_large = (3*10**9)*np.ones(2)
 
         for i in range(0,2):
 
@@ -65,6 +91,7 @@ class rocket:
  
                 dt_small[i] = dr / v_n
                 dt_large[i] = ( -v_n + np.sqrt(v_n**2 + 4 * a_n1 * dr ) ) / ( 2 * a_n1 ) 
+                #print(dt_small, dt_large)
 
             if self.pos+dr == zeroAccelerationPoint:
 
@@ -92,12 +119,14 @@ class rocket:
                 dt_large[i] = dr / v_n
 
         return [min(dt_small), max(dt_large)]
-            
-            
+'''
 
-def timeTaken(x_0,v_0,earth,moon):
 
-    myrocket = rocket(x_0,v_0, earth,moon)
+'''
+def timeTaken(x_0,v_0):
+
+    bodies = [earth,moon]
+    myrocket = rocket(x_0,v_0, bodies)
 
     t_smaller = 0
     t_larger = 0
@@ -109,20 +138,21 @@ def timeTaken(x_0,v_0,earth,moon):
         distancerocketearth = abs(myrocket.pos - earth.pos)
         distancerocketmoon = abs(myrocket.pos - moon.pos)
 
+       # print(myrocket.v)
         if distancerocketearth > 2 * moon.pos:
             break
-            return -99
+            #return -1
         if distancerocketearth < earth.radius:
             break
-            return -99
+            #return -2
         if distancerocketmoon < moon.radius:
             break
-            
+
+
         else:
             dt = myrocket.getTimeIncrease()
-            if dt[0] < 0 or dt[1] < 0:
-                print("going backwards in time")
-                print((moon.pos-myrocket.pos)/moon.pos)
+            if np.isnan(dt[0]):
+                print("going back to earth")
                 break
             
             t_smaller = t_smaller + dt[0]
@@ -131,82 +161,55 @@ def timeTaken(x_0,v_0,earth,moon):
             counter = counter +1
 
 
-    return [t_smaller, t_larger]
+    return [t_smaller, t_larger, myrocket,counter]
+
+
+'''
+
 
 def randomise(variable, maxError):
     variable = uniform(variable+maxError, variable-maxError)
     return variable
 
-
-def experimentTime(N, v_0):
-
-    time = np.zeros((N,2))
-    
-    for j in range(N):
-    
-        p_m = randomise(0.4055 * 10 ** 9, 0.00005 * 10 ** 9)
-        p_e = 0
-    
-        m_m = randomise(0.07346 * 10 ** 24, 0.000005 * 10 * 24)
-        m_e = randomise(5.9724 * 10 ** 24, 0.00005 * 10 ** 24)
-    
-        r_m = randomise( 1736.0 * 10 ** 3, 0.05*10**3)
-        r_e = randomise(6356.752 * 10 ** 3, 0.0005 * 10 ** 3)
-    
-        earth = planet(p_e, r_e, m_e)
-        moon = planet(p_m, r_m, m_m)
-    
-        T = timeTaken(h + r_e, np.array([v_0, v_0]), earth, moon)
-        time[j] = [T[0], T[1]]
-
-    return [np.mean(time), np.std(time)]
-
-#From the miminum_initial_speed.py file, we know that the minimum initial
-# speed needed to reach the moon is between 10.9869 and 10.9871 km/s. Let's
-# calculate the time it takes to reach the moon at 10 percent more than the 
-# minimum initial speed.
-
-rep = 20 # number of random events
-
-v_min_low = 10.9869*10**3
-v_min_high = 10.9871*10**3
-
-v_low = 1.1*v_min_low
-v_high = 1.1*v_min_high
-
-T_10_percent = [experimentTime(rep,v_low), experimentTime(rep,v_high)]
-
-print("The mean time to reach the moon was: ", T_10_percent[0][0]/3600, "and the standard error", T_10_percent[0][1]/3600, "hours for the lower estimate of 1.1*v_min")
-print("The mean time to reach the moon was: ", T_10_percent[1][0]/3600, "and the standard error", T_10_percent[1][1]/3600, "hours for the higher  estimate of 1.1*v_min")
-print("Let's calculate the time it takes to reach the moon")
-
-# The following part is for calculating the time it takes to reach 
-# the moon with many different initial speeds. This data will be used
-# to create a graph of time against initial speeds, with error bars
-# for the time. This graph can be found in the plot_time_vs_vel.py file.
-
 bins = 10
+rep = 10
 
-v_0_array = np.linspace(12*10**3, 15*10**3, num=bins)
+v_0_set = np.linspace(10.9869*10**4, 10.9871*10**4, num=bins)
 
-time_mean_array = np.zeros(bins)
-time_sd_array   = np.zeros(bins)
+v_0_count = np.zeros(bins)
 
-rep =20
 
 for i in range(bins):
+    
+    for j in range(rep):
+        p_m = randomise(0.4055 * 10 ** 9, 0.00005 * 10 ** 9)
+        p_e = 0
+        
+        m_m = randomise(0.07346 * 10 ** 24, 0.000005 * 10 * 24)
+        m_e = randomise(5.9724 * 10 ** 24, 0.00005 * 10 ** 24)
+        
+        r_m = randomise( 1736.0 * 10 ** 3, 0.05*10**3)
+        r_e = randomise(6356.752 * 10 ** 3, 0.0005 * 10 ** 3)
 
-    time = np.zeros((bins,2))
 
-    time = experimentTime(rep, v_0_array[i])
-    time_mean_array[i] = time[0]
-    time_sd_array[i] = time[1]
+        earth = planet(p_e, r_e, m_e)
+        moon = planet(p_m, r_m, m_m)
+
+        bodies = [earth,moon]
+
+        myrocket = rocket(h, v_0_set[i], bodies)
+        #print(myrocket.pos,myrocket.v)
+ 
+        if(reachTheMoon(myrocket)):
+            v_0_count[i] = v_0_count[i] +1
 
 
-# Let's save the data into a a separate file 
+d = {'bins': v_0_set, 'count': v_0_count}
+v_0_distribution_data = pd.DataFrame(d)
 
-d = {'vel': v_0_array, 'mean time': time_mean_array, 'std time': time_sd_array}
 
-time_vel_data= pd.DataFrame(d)
-time_vel_data.to_csv("time_vel_data.csv")
+v_0_distribution_data.to_csv("v_0_distribution_data.csv")
 
+print(v_0_distribution_data)
+
+#print("Some estimates for the minimum initial velocity", minimum_v_array)
